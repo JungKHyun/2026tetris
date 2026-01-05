@@ -1,13 +1,11 @@
 
-import { GoogleGenAI } from "@google/genai";
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   COLS, ROWS, createEmptyBoard, randomTetromino 
 } from './constants';
-import { GameState, Position, AiCommentary } from './types';
+import { GameState, Position } from './types';
 import { useInterval } from './hooks/useInterval';
 import Block from './components/Block';
-import { getAiFeedback } from './services/geminiService';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -21,30 +19,7 @@ const App: React.FC = () => {
     isPaused: false,
   });
 
-  const [aiLog, setAiLog] = useState<AiCommentary[]>([
-    { message: "안녕! 내가 너의 끝내주는 코치야! 준비됐어?!", sentiment: "positive" }
-  ]);
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(true);
-  const lastAiScoreRef = useRef(0);
-
-  // Check for API Key on mount (only for the AI Coaching feature)
-  useEffect(() => {
-    const checkKey = async () => {
-      if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(selected);
-      }
-    };
-    checkKey();
-  }, []);
-
-  const handleOpenKey = async () => {
-    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
-      await window.aistudio.openSelectKey();
-      setHasApiKey(true);
-    }
-  };
+  const [flash, setFlash] = useState(false);
 
   // --- Game Logic Functions ---
 
@@ -84,9 +59,11 @@ const App: React.FC = () => {
     setGameState(prev => {
       if (!prev.activePiece || prev.isPaused || prev.isGameOver) return prev;
       const newPos = { x: prev.activePiece.pos.x + dir.x, y: prev.activePiece.pos.y + dir.y };
+      
       if (!checkCollision(newPos, prev.activePiece.tetromino.shape, prev.board)) {
         return { ...prev, activePiece: { ...prev.activePiece, pos: newPos } };
       }
+
       if (dir.y > 0) {
         const newBoard = [...prev.board.map(row => [...row])];
         const { shape, color } = prev.activePiece.tetromino;
@@ -107,16 +84,23 @@ const App: React.FC = () => {
           if (isFull) linesCleared++;
           return !isFull;
         });
+        
+        if (linesCleared > 0) {
+          setFlash(true);
+          setTimeout(() => setFlash(false), 100);
+        }
+
         while (filteredBoard.length < ROWS) filteredBoard.unshift(Array(COLS).fill('empty'));
 
-        const newScore = prev.score + (linesCleared === 4 ? 1000 : linesCleared * 100);
+        const newScore = prev.score + (linesCleared === 4 ? 1200 : linesCleared * 100);
+        const newLines = prev.lines + linesCleared;
         return {
           ...prev,
           board: filteredBoard,
           activePiece: null,
           score: newScore,
-          lines: prev.lines + linesCleared,
-          level: Math.floor((prev.lines + linesCleared) / 10) + 1
+          lines: newLines,
+          level: Math.floor(newLines / 10) + 1
         };
       }
       return prev;
@@ -156,12 +140,19 @@ const App: React.FC = () => {
         if (isFull) linesCleared++;
         return !isFull;
       });
+      
+      if (linesCleared > 0) {
+        setFlash(true);
+        setTimeout(() => setFlash(false), 100);
+      }
+
       while (filteredBoard.length < ROWS) filteredBoard.unshift(Array(COLS).fill('empty'));
+      
       return {
         ...prev,
         board: filteredBoard,
         activePiece: null,
-        score: prev.score + (linesCleared === 4 ? 1500 : linesCleared * 150),
+        score: prev.score + (linesCleared === 4 ? 1500 : linesCleared * 150) + (finalY - prev.activePiece.pos.y),
         lines: prev.lines + linesCleared,
         level: Math.floor((prev.lines + linesCleared) / 10) + 1
       };
@@ -171,22 +162,7 @@ const App: React.FC = () => {
   useInterval(() => {
     if (!gameState.activePiece && !gameState.isGameOver && !gameState.isPaused) spawnPiece();
     else if (gameState.activePiece) moveActivePiece({ x: 0, y: 1 });
-  }, gameState.isPaused || gameState.isGameOver ? null : Math.max(100, 1000 - (gameState.level - 1) * 100));
-
-  useEffect(() => {
-    const triggerAi = async () => {
-      if (!hasApiKey || gameState.isGameOver || isAiThinking) return;
-      if (gameState.score - lastAiScoreRef.current >= 500 || (gameState.score > 0 && lastAiScoreRef.current === 0)) {
-        setIsAiThinking(true);
-        const feedback = await getAiFeedback(gameState.board, gameState.score, gameState.nextPiece.name);
-        setAiLog(prev => [feedback, ...prev].slice(0, 10));
-        lastAiScoreRef.current = gameState.score;
-        setIsAiThinking(false);
-      }
-    };
-    const timer = setTimeout(triggerAi, 3000);
-    return () => clearTimeout(timer);
-  }, [gameState.score, gameState.board, gameState.isGameOver, hasApiKey, isAiThinking]);
+  }, gameState.isPaused || gameState.isGameOver ? null : Math.max(80, 800 - (gameState.level - 1) * 80));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -196,7 +172,7 @@ const App: React.FC = () => {
         case 'ArrowRight': moveActivePiece({ x: 1, y: 0 }); break;
         case 'ArrowDown': moveActivePiece({ x: 0, y: 1 }); break;
         case 'ArrowUp': rotatePiece(); break;
-        case ' ': hardDrop(); break;
+        case ' ': e.preventDefault(); hardDrop(); break;
         case 'p': case 'P': setGameState(prev => ({ ...prev, isPaused: !prev.isPaused })); break;
       }
     };
@@ -232,8 +208,8 @@ const App: React.FC = () => {
 
     return (
       <div 
-        className="grid grid-cols-10 gap-0 p-1 bg-[#111] border-4 border-yellow-400 shadow-[0_0_20px_#ffff00]"
-        style={{ width: `${COLS * 30 + 10}px`, height: `${ROWS * 30 + 10}px` }}
+        className={`grid grid-cols-10 gap-0 p-1 bg-black border-[10px] border-[#888] shadow-[inset_4px_4px_0_#000,4px_4px_0_#fff] ${flash ? 'bg-white' : ''}`}
+        style={{ width: `${COLS * 30 + 20}px`, height: `${ROWS * 30 + 20}px` }}
       >
         {displayBoard.map((row, y) => row.map((cell, x) => (
           <div key={`${x}-${y}`} className="w-[30px] h-[30px]">
@@ -245,105 +221,91 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#000080] text-white font-serif overflow-hidden select-none">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#008080] overflow-hidden select-none font-mono">
       
-      {/* 촌스러운 타이틀 바 */}
-      <div className="w-full max-w-4xl bg-gradient-to-r from-red-600 via-yellow-400 to-green-600 p-2 mb-6 border-4 border-white text-center shadow-[4px_4px_0px_#000]">
-        <h1 className="text-4xl font-black italic tracking-tighter text-blue-900 drop-shadow-[2px_2px_0px_#fff]">
-          SUPER AI RETRO TETRIS 2026
+      {/* 90년대풍 제목 */}
+      <div className="mb-8 p-4 bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black shadow-md">
+        <h1 className="text-4xl font-black text-blue-900 tracking-widest uppercase italic drop-shadow-sm">
+          TETRIS 1990 CLASSIC
         </h1>
       </div>
 
-      {!hasApiKey && (
-        <div className="fixed top-2 right-2 z-50 animate-bounce">
-          <button 
-            onClick={handleOpenKey}
-            className="bg-red-600 border-4 border-yellow-300 px-4 py-2 text-xs font-bold shadow-[4px_4px_0px_#000] hover:scale-110 transition-transform"
-          >
-            [AI 훈수 기능을 위해 API KEY를 설정하세요!]
-          </button>
+      <div className="flex flex-row gap-8 items-start">
+        
+        {/* 왼쪽: 통계창 */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
+            <p className="text-xs font-bold text-black border-b border-black mb-2">SCORE</p>
+            <p className="text-xl font-bold text-red-700 text-right">{gameState.score.toString().padStart(7, '0')}</p>
+          </div>
+          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
+            <p className="text-xs font-bold text-black border-b border-black mb-2">LINES</p>
+            <p className="text-xl font-bold text-blue-700 text-right">{gameState.lines}</p>
+          </div>
+          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
+            <p className="text-xs font-bold text-black border-b border-black mb-2">LEVEL</p>
+            <p className="text-xl font-bold text-green-700 text-right">{gameState.level}</p>
+          </div>
         </div>
-      )}
 
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        {/* 왼쪽: 정보창 */}
-        <div className="flex flex-col gap-4 w-48">
-          <div className="bg-black border-4 border-blue-400 p-4 text-center shadow-[4px_4px_0px_#000]">
-            <p className="text-xs text-yellow-400 font-bold mb-1 underline">SCORE</p>
-            <p className="text-2xl font-black text-white">{gameState.score}</p>
-          </div>
-          <div className="bg-black border-4 border-green-400 p-4 text-center shadow-[4px_4px_0px_#000]">
-            <p className="text-xs text-yellow-400 font-bold mb-1 underline">LEVEL</p>
-            <p className="text-2xl font-black text-white">{gameState.level}</p>
-          </div>
-          <div className="bg-black border-4 border-magenta-400 p-4 shadow-[4px_4px_0px_#000]">
-            <p className="text-xs text-yellow-400 font-bold mb-2 text-center underline">NEXT</p>
-            <div className="flex justify-center h-16 items-center">
-              <div className="grid grid-cols-4 grid-rows-2 gap-1 scale-125">
+        {/* 가운데: 게임판 */}
+        <div className="relative">
+          {renderBoard()}
+          
+          {gameState.isGameOver && (
+            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center border-4 border-red-600 p-8 z-20">
+              <h2 className="text-5xl font-black text-red-600 mb-6 text-center animate-bounce">GAME OVER</h2>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="bg-[#c0c0c0] border-t-4 border-l-4 border-white border-r-4 border-b-4 border-black px-6 py-2 font-bold text-black active:border-t-black active:border-l-black active:border-white active:border-r-white"
+              >
+                TRY AGAIN
+              </button>
+            </div>
+          )}
+
+          {gameState.isPaused && !gameState.isGameOver && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+              <h2 className="text-4xl font-black text-yellow-400 drop-shadow-lg">PAUSED</h2>
+            </div>
+          )}
+        </div>
+
+        {/* 오른쪽: 다음 블록 및 조작법 */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40 h-40">
+            <p className="text-xs font-bold text-black border-b border-black mb-4">NEXT</p>
+            <div className="flex justify-center items-center h-20">
+              <div className="grid grid-cols-4 grid-rows-2 gap-0 scale-125">
                 {gameState.nextPiece.shape.map((row, y) => row.map((val, x) => (
-                  <div key={`next-${x}-${y}`} className="w-3 h-3">
+                  <div key={`next-${x}-${y}`} className="w-4 h-4">
                     {val !== 0 && <Block color={gameState.nextPiece.color} />}
                   </div>
                 )))}
               </div>
             </div>
           </div>
+          
+          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40 text-[10px] leading-tight text-black">
+            <p className="font-bold underline mb-2 text-center">CONTROLS</p>
+            <p>←/→: MOVE</p>
+            <p>↑: ROTATE</p>
+            <p>↓: SOFT DROP</p>
+            <p>SPACE: HARD DROP</p>
+            <p>P: PAUSE</p>
+          </div>
+
           <button 
             onClick={() => window.location.reload()}
-            className="mt-4 bg-red-600 hover:bg-red-500 border-4 border-white p-3 font-black italic text-lg shadow-[4px_4px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all"
+            className="mt-2 bg-red-600 border-t-4 border-l-4 border-red-400 border-r-4 border-b-4 border-red-900 p-2 font-bold text-white text-xs shadow-md"
           >
-            RESET GAME
+            QUIT GAME
           </button>
-        </div>
-
-        {/* 가운데: 게임판 */}
-        <div className="relative">
-          {renderBoard()}
-          {gameState.isGameOver && (
-            <div className="absolute inset-0 bg-red-600/90 flex flex-col items-center justify-center border-8 border-yellow-400 p-10 animate-pulse">
-              <h2 className="text-6xl font-black italic text-white mb-4 drop-shadow-xl">GAME OVER!</h2>
-              <p className="text-2xl font-bold text-yellow-300 mb-8 underline">YOUR SCORE: {gameState.score}</p>
-              <button onClick={() => window.location.reload()} className="bg-blue-600 text-white px-8 py-4 border-4 border-white text-xl font-bold hover:scale-110">REPLAY??</button>
-            </div>
-          )}
-          {gameState.isPaused && !gameState.isGameOver && (
-            <div className="absolute inset-0 bg-blue-900/60 flex items-center justify-center">
-              <h2 className="text-5xl font-black text-yellow-400 animate-bounce shadow-black">PAUSE!!</h2>
-            </div>
-          )}
-        </div>
-
-        {/* 오른쪽: AI 훈수창 */}
-        <div className="w-80 bg-black border-4 border-white p-4 flex flex-col h-[620px] shadow-[8px_8px_0px_#000]">
-          <div className="bg-yellow-400 text-black p-1 text-center font-bold text-sm mb-4 border-2 border-black">
-            AI COACH GENIE (v1.0)
-          </div>
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-thin">
-            {aiLog.map((log, i) => (
-              <div 
-                key={i} 
-                className={`p-3 border-2 text-sm font-bold shadow-[2px_2px_0px_#fff] ${
-                  log.sentiment === 'positive' ? 'bg-green-700 border-green-300' :
-                  log.sentiment === 'negative' ? 'bg-red-700 border-red-300' :
-                  log.sentiment === 'advice' ? 'bg-blue-700 border-blue-300' : 'bg-gray-800 border-gray-400'
-                }`}
-              >
-                <span className="text-yellow-300">▶</span> {log.message}
-              </div>
-            ))}
-            {isAiThinking && <div className="text-center text-xs text-yellow-400 animate-pulse italic mt-2">... AI 분석중 ...</div>}
-          </div>
-          <div className="mt-4 p-2 bg-blue-900 border-2 border-blue-400 text-[10px] leading-tight font-mono">
-            <p className="text-yellow-400 underline mb-1">USER MANUAL</p>
-            <p>화살표: 움직이기 & 회전</p>
-            <p>스페이스: 즉시 하강(깡드랍)</p>
-            <p>P: 일시정지(커피타임)</p>
-          </div>
         </div>
       </div>
 
-      <div className="mt-8 text-xs text-gray-400 font-mono">
-        (C) 1990 SUPER-AI GAMES INC. ALL RIGHTS RESERVED.
+      <div className="mt-12 text-[10px] text-white/50 font-mono tracking-widest bg-black/20 px-4 py-1 rounded-full">
+        (C) 1990 SUPER-TETRIS ENTERTAINMENT. NO API KEY REQUIRED.
       </div>
     </div>
   );
