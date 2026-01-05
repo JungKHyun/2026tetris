@@ -206,10 +206,10 @@ const App: React.FC = () => {
 
     return (
       <div 
-        className={`grid grid-cols-10 gap-0 p-1 bg-black border-[4px] border-red-600 shadow-[0_0_10px_rgba(255,0,0,0.5)] ${flash ? 'bg-white' : ''}`}
-        style={{ width: `${COLS * 30 + 10}px`, height: `${ROWS * 30 + 10}px` }}
+        className={`grid grid-cols-10 gap-0 p-1 bg-black border-[6px] border-[#d00000] shadow-[0_0_20px_rgba(0,0,0,0.8)] ${flash ? 'bg-white' : ''}`}
+        style={{ width: '312px', height: '612px', minWidth: '312px', minHeight: '612px' }}
       >
-        {displayBoard.map((row, y) => row.map((cell, x) => (
+        {displayBoard.flatMap((row, y) => row.map((cell, x) => (
           <div key={`${x}-${y}`} className="w-[30px] h-[30px] relative">
             <Block color={cell === 'ghost' ? gameState.activePiece?.tetromino.color || 'white' : cell} ghost={cell === 'ghost'} />
           </div>
@@ -219,22 +219,22 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#008080] p-4 font-mono select-none">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#008080] p-8 font-mono select-none overflow-y-auto">
       
-      {/* 90년대 윈도우 스타일 헤더 */}
-      <div className="mb-10 p-6 bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
-        <h1 className="text-5xl font-black text-[#000080] tracking-[0.2em] italic drop-shadow-[2px_2px_0px_white]">
+      {/* 윈도우 스타일 헤더 */}
+      <div className="mb-10 p-6 bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black shadow-[6px_6px_0px_rgba(0,0,0,0.5)]">
+        <h1 className="text-5xl font-black text-[#000080] tracking-[0.15em] italic drop-shadow-[2px_2px_0px_white] whitespace-nowrap">
           TETRIS 1990 CLASSIC
         </h1>
       </div>
 
       <div className="flex flex-row gap-12 items-start">
         
-        {/* 왼쪽 섹션: 통계 */}
+        {/* 왼쪽 섹션 */}
         <div className="flex flex-col gap-6">
           <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 shadow-md">
             <p className="text-sm font-bold text-black border-b-[2px] border-black mb-2 pb-1">SCORE</p>
-            <p className="text-3xl font-black text-red-600 text-right tracking-tighter">{gameState.score.toString().padStart(7, '0')}</p>
+            <p className="text-3xl font-black text-red-600 text-right tracking-tighter drop-shadow-sm">{gameState.score.toString().padStart(7, '0')}</p>
           </div>
           <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 shadow-md">
             <p className="text-sm font-bold text-black border-b-[2px] border-black mb-2 pb-1">LINES</p>
@@ -246,18 +246,18 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        {/* 중앙 섹션: 게임 보드 */}
-        <div className="relative p-1 bg-white border-[2px] border-white">
+        {/* 중앙 게임판 컨테이너 */}
+        <div className="relative p-1 bg-white border-t-[2px] border-l-[2px] border-[#dfdfdf] border-r-[2px] border-b-[2px] border-[#404040]">
           <div className="border-[2px] border-black">
             {renderBoard()}
           </div>
           
           {gameState.isGameOver && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-50">
-              <h2 className="text-6xl font-black text-red-600 mb-10 drop-shadow-[4px_4px_0px_black] animate-pulse">GAME OVER</h2>
+            <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-[100]">
+              <h2 className="text-5xl font-black text-[#ff0000] mb-12 drop-shadow-[4px_4px_0px_black] text-center px-4 leading-tight">GAME OVER</h2>
               <button 
                 onClick={() => window.location.reload()} 
-                className="bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black px-10 py-4 text-2xl font-black text-black active:translate-y-1 active:border-t-black active:border-l-black shadow-lg"
+                className="bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black px-8 py-4 text-xl font-black text-black active:translate-y-1 active:border-t-black active:border-l-black shadow-xl"
               >
                 TRY AGAIN
               </button>
@@ -265,18 +265,18 @@ const App: React.FC = () => {
           )}
 
           {gameState.isPaused && !gameState.isGameOver && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-40">
-              <h2 className="text-5xl font-black text-yellow-400 drop-shadow-[3px_3px_0px_black]">PAUSED</h2>
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-[90]">
+              <h2 className="text-4xl font-black text-yellow-400 drop-shadow-[3px_3px_0px_black] animate-pulse">PAUSED</h2>
             </div>
           )}
         </div>
 
-        {/* 오른쪽 섹션: 다음 블록 & 도움말 */}
+        {/* 오른쪽 섹션 */}
         <div className="flex flex-col gap-6">
           <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 h-48 shadow-md">
             <p className="text-sm font-bold text-black border-b-[2px] border-black mb-4 pb-1">NEXT</p>
             <div className="flex justify-center items-center h-24">
-              <div className="grid grid-cols-4 grid-rows-2 gap-1 scale-[1.5]">
+              <div className="grid grid-cols-4 grid-rows-2 gap-1 scale-[1.3]">
                 {gameState.nextPiece.shape.map((row, y) => row.map((val, x) => (
                   <div key={`next-${x}-${y}`} className="w-4 h-4">
                     {val !== 0 && <Block color={gameState.nextPiece.color} />}
@@ -304,8 +304,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-16 text-[11px] text-white/70 font-bold tracking-widest bg-black/30 px-6 py-2 rounded-full border border-white/20">
-        (C) 1990 SUPER-TETRIS ENTERTAINMENT INC.
+      <div className="mt-16 text-[11px] text-white/70 font-bold tracking-widest bg-black/40 px-8 py-2 rounded-full border border-white/20">
+        (C) 1990 SUPER-TETRIS ENTERTAINMENT CORP.
       </div>
     </div>
   );
