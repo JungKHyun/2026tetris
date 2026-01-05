@@ -7,24 +7,29 @@ interface BlockProps {
 }
 
 const Block: React.FC<BlockProps> = ({ color, ghost = false }) => {
-  if (color === 'empty') return <div className="w-full h-full bg-white/[0.03] border border-white/[0.05] rounded-sm" />;
+  if (color === 'empty') return <div className="w-full h-full bg-[#111] border border-[#222] rounded-none" />;
 
-  const baseStyle: React.CSSProperties = {
-    backgroundColor: ghost ? 'transparent' : color,
-    borderColor: ghost ? `${color}44` : 'rgba(255,255,255,0.2)',
-    boxShadow: ghost 
-      ? 'none' 
-      : `inset 0 0 12px rgba(255,255,255,0.2), 0 0 15px ${color}33`,
-  };
+  if (ghost) {
+    return (
+      <div 
+        className="w-full h-full border-2 border-dashed opacity-50"
+        style={{ borderColor: color }}
+      />
+    );
+  }
 
   return (
     <div 
-      className={`w-full h-full rounded-sm border transition-all duration-200 ${ghost ? 'border-dashed opacity-40' : 'border-t-white/30 border-l-white/20'}`}
-      style={baseStyle}
+      className="w-full h-full border-[3px]"
+      style={{ 
+        backgroundColor: color,
+        borderTopColor: 'rgba(255,255,255,0.8)',
+        borderLeftColor: 'rgba(255,255,255,0.5)',
+        borderRightColor: 'rgba(0,0,0,0.5)',
+        borderBottomColor: 'rgba(0,0,0,0.8)',
+      }}
     >
-      {!ghost && (
-        <div className="w-full h-full bg-gradient-to-br from-white/20 to-transparent pointer-events-none" />
-      )}
+      <div className="w-full h-full border border-black/20" />
     </div>
   );
 };

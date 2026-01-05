@@ -1,5 +1,5 @@
 {
-  "name": "제미나이 AI 테트리스",
-  "description": "클래식 테트리스에 Gemini AI 코칭 기능을 결합한 차세대 퍼즐 게임입니다. AI가 실시간으로 당신의 배치를 분석하고 조언을 제공합니다.",
+  "name": "레트로 AI 테트리스",
+  "description": "90년대 오락실 감성 그대로! Gemini AI가 당신의 실력을 '훈수'두는 촌스럽지만 강력한 테트리스입니다.",
   "requestFramePermissions": []
 }

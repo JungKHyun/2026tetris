@@ -13,7 +13,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [0, 1, 0, 0],
       [0, 1, 0, 0],
     ],
-    color: '#22d3ee', // Cyan 400
+    color: '#00FFFF', // Cyan
     name: 'I',
   },
   J: {
@@ -22,7 +22,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [0, 1, 0],
       [1, 1, 0],
     ],
-    color: '#818cf8', // Indigo 400
+    color: '#0000FF', // Blue
     name: 'J',
   },
   L: {
@@ -31,7 +31,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [0, 1, 0],
       [0, 1, 1],
     ],
-    color: '#fb923c', // Orange 400
+    color: '#FF7F00', // Orange
     name: 'L',
   },
   O: {
@@ -39,7 +39,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [1, 1],
       [1, 1],
     ],
-    color: '#facc15', // Yellow 400
+    color: '#FFFF00', // Yellow
     name: 'O',
   },
   S: {
@@ -48,7 +48,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [1, 1, 0],
       [0, 0, 0],
     ],
-    color: '#4ade80', // Emerald 400
+    color: '#00FF00', // Green
     name: 'S',
   },
   T: {
@@ -57,7 +57,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [1, 1, 1],
       [0, 0, 0],
     ],
-    color: '#c084fc', // Purple 400
+    color: '#FF00FF', // Magenta
     name: 'T',
   },
   Z: {
@@ -66,7 +66,7 @@ export const TETROMINOS: { [key: string]: Tetromino } = {
       [0, 1, 1],
       [0, 0, 0],
     ],
-    color: '#fb7185', // Rose 400
+    color: '#FF0000', // Red
     name: 'Z',
   },
 };
