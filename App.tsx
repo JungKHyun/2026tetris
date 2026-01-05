@@ -21,8 +21,6 @@ const App: React.FC = () => {
 
   const [flash, setFlash] = useState(false);
 
-  // --- Game Logic Functions ---
-
   const checkCollision = useCallback((pos: Position, shape: number[][], board: string[][]) => {
     for (let y = 0; y < shape.length; y++) {
       for (let x = 0; x < shape[y].length; x++) {
@@ -208,11 +206,11 @@ const App: React.FC = () => {
 
     return (
       <div 
-        className={`grid grid-cols-10 gap-0 p-1 bg-black border-[10px] border-[#888] shadow-[inset_4px_4px_0_#000,4px_4px_0_#fff] ${flash ? 'bg-white' : ''}`}
-        style={{ width: `${COLS * 30 + 20}px`, height: `${ROWS * 30 + 20}px` }}
+        className={`grid grid-cols-10 gap-0 p-1 bg-black border-[4px] border-red-600 shadow-[0_0_10px_rgba(255,0,0,0.5)] ${flash ? 'bg-white' : ''}`}
+        style={{ width: `${COLS * 30 + 10}px`, height: `${ROWS * 30 + 10}px` }}
       >
         {displayBoard.map((row, y) => row.map((cell, x) => (
-          <div key={`${x}-${y}`} className="w-[30px] h-[30px]">
+          <div key={`${x}-${y}`} className="w-[30px] h-[30px] relative">
             <Block color={cell === 'ghost' ? gameState.activePiece?.tetromino.color || 'white' : cell} ghost={cell === 'ghost'} />
           </div>
         )))}
@@ -221,43 +219,45 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#008080] overflow-hidden select-none font-mono">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#008080] p-4 font-mono select-none">
       
-      {/* 90년대풍 제목 */}
-      <div className="mb-8 p-4 bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black shadow-md">
-        <h1 className="text-4xl font-black text-blue-900 tracking-widest uppercase italic drop-shadow-sm">
+      {/* 90년대 윈도우 스타일 헤더 */}
+      <div className="mb-10 p-6 bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black shadow-[4px_4px_0px_rgba(0,0,0,0.5)]">
+        <h1 className="text-5xl font-black text-[#000080] tracking-[0.2em] italic drop-shadow-[2px_2px_0px_white]">
           TETRIS 1990 CLASSIC
         </h1>
       </div>
 
-      <div className="flex flex-row gap-8 items-start">
+      <div className="flex flex-row gap-12 items-start">
         
-        {/* 왼쪽: 통계창 */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
-            <p className="text-xs font-bold text-black border-b border-black mb-2">SCORE</p>
-            <p className="text-xl font-bold text-red-700 text-right">{gameState.score.toString().padStart(7, '0')}</p>
+        {/* 왼쪽 섹션: 통계 */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 shadow-md">
+            <p className="text-sm font-bold text-black border-b-[2px] border-black mb-2 pb-1">SCORE</p>
+            <p className="text-3xl font-black text-red-600 text-right tracking-tighter">{gameState.score.toString().padStart(7, '0')}</p>
           </div>
-          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
-            <p className="text-xs font-bold text-black border-b border-black mb-2">LINES</p>
-            <p className="text-xl font-bold text-blue-700 text-right">{gameState.lines}</p>
+          <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 shadow-md">
+            <p className="text-sm font-bold text-black border-b-[2px] border-black mb-2 pb-1">LINES</p>
+            <p className="text-3xl font-black text-blue-700 text-right">{gameState.lines}</p>
           </div>
-          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40">
-            <p className="text-xs font-bold text-black border-b border-black mb-2">LEVEL</p>
-            <p className="text-xl font-bold text-green-700 text-right">{gameState.level}</p>
+          <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 shadow-md">
+            <p className="text-sm font-bold text-black border-b-[2px] border-black mb-2 pb-1">LEVEL</p>
+            <p className="text-3xl font-black text-green-700 text-right">{gameState.level}</p>
           </div>
         </div>
 
-        {/* 가운데: 게임판 */}
-        <div className="relative">
-          {renderBoard()}
+        {/* 중앙 섹션: 게임 보드 */}
+        <div className="relative p-1 bg-white border-[2px] border-white">
+          <div className="border-[2px] border-black">
+            {renderBoard()}
+          </div>
           
           {gameState.isGameOver && (
-            <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center border-4 border-red-600 p-8 z-20">
-              <h2 className="text-5xl font-black text-red-600 mb-6 text-center animate-bounce">GAME OVER</h2>
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-50">
+              <h2 className="text-6xl font-black text-red-600 mb-10 drop-shadow-[4px_4px_0px_black] animate-pulse">GAME OVER</h2>
               <button 
                 onClick={() => window.location.reload()} 
-                className="bg-[#c0c0c0] border-t-4 border-l-4 border-white border-r-4 border-b-4 border-black px-6 py-2 font-bold text-black active:border-t-black active:border-l-black active:border-white active:border-r-white"
+                className="bg-[#c0c0c0] border-t-[3px] border-l-[3px] border-white border-r-[3px] border-b-[3px] border-black px-10 py-4 text-2xl font-black text-black active:translate-y-1 active:border-t-black active:border-l-black shadow-lg"
               >
                 TRY AGAIN
               </button>
@@ -265,18 +265,18 @@ const App: React.FC = () => {
           )}
 
           {gameState.isPaused && !gameState.isGameOver && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-              <h2 className="text-4xl font-black text-yellow-400 drop-shadow-lg">PAUSED</h2>
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-40">
+              <h2 className="text-5xl font-black text-yellow-400 drop-shadow-[3px_3px_0px_black]">PAUSED</h2>
             </div>
           )}
         </div>
 
-        {/* 오른쪽: 다음 블록 및 조작법 */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40 h-40">
-            <p className="text-xs font-bold text-black border-b border-black mb-4">NEXT</p>
-            <div className="flex justify-center items-center h-20">
-              <div className="grid grid-cols-4 grid-rows-2 gap-0 scale-125">
+        {/* 오른쪽 섹션: 다음 블록 & 도움말 */}
+        <div className="flex flex-col gap-6">
+          <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 h-48 shadow-md">
+            <p className="text-sm font-bold text-black border-b-[2px] border-black mb-4 pb-1">NEXT</p>
+            <div className="flex justify-center items-center h-24">
+              <div className="grid grid-cols-4 grid-rows-2 gap-1 scale-[1.5]">
                 {gameState.nextPiece.shape.map((row, y) => row.map((val, x) => (
                   <div key={`next-${x}-${y}`} className="w-4 h-4">
                     {val !== 0 && <Block color={gameState.nextPiece.color} />}
@@ -286,8 +286,8 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="bg-[#c0c0c0] border-t-2 border-l-2 border-white border-r-2 border-b-2 border-black p-4 w-40 text-[10px] leading-tight text-black">
-            <p className="font-bold underline mb-2 text-center">CONTROLS</p>
+          <div className="bg-[#c0c0c0] border-t-[2px] border-l-[2px] border-white border-r-[2px] border-b-[2px] border-black p-4 w-44 text-[11px] leading-relaxed text-black shadow-md">
+            <p className="font-bold underline mb-3 text-center text-sm">CONTROLS</p>
             <p>←/→: MOVE</p>
             <p>↑: ROTATE</p>
             <p>↓: SOFT DROP</p>
@@ -297,15 +297,15 @@ const App: React.FC = () => {
 
           <button 
             onClick={() => window.location.reload()}
-            className="mt-2 bg-red-600 border-t-4 border-l-4 border-red-400 border-r-4 border-b-4 border-red-900 p-2 font-bold text-white text-xs shadow-md"
+            className="mt-4 bg-[#cc0000] border-t-[3px] border-l-[3px] border-[#ff6666] border-r-[3px] border-b-[3px] border-[#660000] p-3 font-black text-white text-sm shadow-md active:translate-y-1"
           >
             QUIT GAME
           </button>
         </div>
       </div>
 
-      <div className="mt-12 text-[10px] text-white/50 font-mono tracking-widest bg-black/20 px-4 py-1 rounded-full">
-        (C) 1990 SUPER-TETRIS ENTERTAINMENT. NO API KEY REQUIRED.
+      <div className="mt-16 text-[11px] text-white/70 font-bold tracking-widest bg-black/30 px-6 py-2 rounded-full border border-white/20">
+        (C) 1990 SUPER-TETRIS ENTERTAINMENT INC.
       </div>
     </div>
   );
